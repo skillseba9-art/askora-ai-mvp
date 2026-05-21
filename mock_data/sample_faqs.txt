@@ -1,0 +1,22 @@
+DENTAL CLINIC AI RECEPTIONIST FAQ DATA
+
+1. What are the clinic's operating hours?
+We are open Monday through Friday from 8:00 AM to 6:00 PM, and Saturday from 9:00 AM to 2:00 PM. We are closed on Sundays and public holidays.
+
+2. Where is the clinic located?
+Our clinic is located at Suite 302, 120 Medical Center Parkway, Houston, TX 77030. Free parking is available in the parking garage behind the building.
+
+3. How can I book an appointment?
+You can book an appointment by asking me right now, or by visiting our online booking portal at https://calendly.com/mock-dental/appointment.
+
+4. What dental insurance plans do you accept?
+We accept major PPO insurance plans including Delta Dental, Cigna, Aetna, MetLife, and Guardian. We do not accept HMO or Medicaid plans at this time. Please have your insurance card ready when you arrive.
+
+5. What is your cancellation policy?
+We require at least 24 hours' notice for cancellation. If you cancel with less than 24 hours' notice, a $50 late cancellation fee may be charged to your account.
+
+6. Do you treat dental emergencies?
+Yes, we offer same-day emergency appointments for issues like severe toothaches, broken teeth, or knocked-out teeth. If you are experiencing a life-threatening emergency, please call 911 or go to the nearest emergency room.
+
+7. What should I bring to my first appointment?
+Please bring a valid photo ID, your dental insurance card, and a list of any current medications you are taking. We recommend arriving 15 minutes early to fill out the new patient paperwork.

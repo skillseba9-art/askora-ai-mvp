@@ -1,0 +1,257 @@
+{
+  "name": "AI Voice Assistant - Post-Call Automation & Lead Ingestion",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "vapi-call-end",
+        "options": {}
+      },
+      "id": "webhook-trigger-id",
+      "name": "Webhook Call End",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        250,
+        350
+      ],
+      "webhookId": "vapi-call-end-webhook"
+    },
+    {
+      "parameters": {
+        "resource": "chat",
+        "operation": "create",
+        "model": "openai/gpt-4o-mini",
+        "messages": {
+          "messageValues": [
+            {
+              "role": "system",
+              "message": "You are an expert AI parser. Analyze the provided call transcript and extract data into the following structured JSON format: { \"callerName\": \"extracted name or Unknown\", \"serviceRequested\": \"dental service or query\", \"leadTemperature\": \"Hot | Warm | Cold\", \"callSummary\": \"one sentence summary\", \"wantsBooking\": true/false, \"email\": \"email if mentioned, else null\" }"
+            },
+            {
+              "role": "user",
+              "message": "Analyze this call record:\nPhone: {{ $json.body.message.customer.number }}\nTranscript:\n{{ $json.body.message.transcript }}"
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "options": {}
+      },
+      "id": "openai-parser-id",
+      "name": "AI Lead Extractor",
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1.1,
+      "position": [
+        480,
+        350
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "openrouter-or-openai-creds-id",
+          "name": "OpenRouter Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "collection": "calls",
+        "columns": "callId,callerPhone,duration,summary,transcript,clientId",
+        "documentId": "={{ $json.body.message.callId }}",
+        "fieldsToSend": {
+          "fieldInput": [
+            {
+              "name": "callId",
+              "value": "={{ $json.body.message.callId }}"
+            },
+            {
+              "name": "callerPhone",
+              "value": "={{ $json.body.message.customer.number }}"
+            },
+            {
+              "name": "duration",
+              "value": "={{ $json.body.message.duration }}"
+            },
+            {
+              "name": "summary",
+              "value": "={{ $('AI Lead Extractor').item.json.callSummary }}"
+            },
+            {
+              "name": "transcript",
+              "value": "={{ $json.body.message.transcript }}"
+            },
+            {
+              "name": "clientId",
+              "value": "={{ $json.body.message.assistant.clientId }}"
+            }
+          ]
+        }
+      },
+      "id": "firestore-calls-id",
+      "name": "Save Call Logs",
+      "type": "n8n-nodes-base.firestore",
+      "typeVersion": 1,
+      "position": [
+        700,
+        240
+      ],
+      "credentials": {
+        "firestoreApi": {
+          "id": "gcp-firestore-creds-id",
+          "name": "GCP Firestore service account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "collection": "leads",
+        "documentId": "={{ $('AI Lead Extractor').item.json.callerName + '-' + $json.body.message.customer.number }}",
+        "fieldsToSend": {
+          "fieldInput": [
+            {
+              "name": "name",
+              "value": "={{ $('AI Lead Extractor').item.json.callerName }}"
+            },
+            {
+              "name": "phone",
+              "value": "={{ $json.body.message.customer.number }}"
+            },
+            {
+              "name": "email",
+              "value": "={{ $('AI Lead Extractor').item.json.email }}"
+            },
+            {
+              "name": "service",
+              "value": "={{ $('AI Lead Extractor').item.json.serviceRequested }}"
+            },
+            {
+              "name": "status",
+              "value": "={{ $('AI Lead Extractor').item.json.leadTemperature }}"
+            },
+            {
+              "name": "notes",
+              "value": "={{ $('AI Lead Extractor').item.json.callSummary }}"
+            },
+            {
+              "name": "lastContact",
+              "value": "={{ new Date().toISOString() }}"
+            }
+          ]
+        }
+      },
+      "id": "firestore-leads-id",
+      "name": "Save Lead Entry",
+      "type": "n8n-nodes-base.firestore",
+      "typeVersion": 1,
+      "position": [
+        700,
+        450
+      ],
+      "credentials": {
+        "firestoreApi": {
+          "id": "gcp-firestore-creds-id",
+          "name": "GCP Firestore service account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "from": "+18885559087",
+        "to": "={{ $json.body.message.customer.number }}",
+        "message": "=Hi {{ $('AI Lead Extractor').item.json.callerName }}, thanks for calling Radiant Dental! Since you requested information about scheduling, you can book an appointment here: https://calendly.com/radiant-dental/appointment"
+      },
+      "id": "twilio-sms-id",
+      "name": "Send SMS Follow-up",
+      "type": "n8n-nodes-base.twilio",
+      "typeVersion": 1,
+      "position": [
+        920,
+        350
+      ],
+      "credentials": {
+        "twilioApi": {
+          "id": "twilio-creds-id",
+          "name": "Twilio Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "admin@askoraai.com",
+        "subject": "=New AI Receptionist Lead: {{ $('AI Lead Extractor').item.json.callerName }}",
+        "emailType": "text",
+        "body": "=A new customer call was handled by Clara. Here are the details:\n\nCaller: {{ $('AI Lead Extractor').item.json.callerName }} ({{ $json.body.message.customer.number }})\nRequested Service: {{ $('AI Lead Extractor').item.json.serviceRequested }}\nLead Temperature: {{ $('AI Lead Extractor').item.json.leadTemperature }}\nSummary: {{ $('AI Lead Extractor').item.json.callSummary }}\n\nPlease log in to the AskOra AI dashboard to review the full audio transcript."
+      },
+      "id": "gmail-notif-id",
+      "name": "Notify Admin Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1140,
+        350
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "gmail-oauth-id",
+          "name": "Gmail Account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook Call End": {
+      "main": [
+        [
+          {
+            "node": "AI Lead Extractor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Lead Extractor": {
+      "main": [
+        [
+          {
+            "node": "Save Call Logs",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Save Lead Entry",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Lead Entry": {
+      "main": [
+        [
+          {
+            "node": "Send SMS Follow-up",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send SMS Follow-up": {
+      "main": [
+        [
+          {
+            "node": "Notify Admin Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "versionId": "f784e1b5-824c-473d-9be2-47ef8d91c10d",
+  "id": "post-call-automation"
+}

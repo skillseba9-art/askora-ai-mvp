@@ -1,0 +1,113 @@
+{
+  "_comment": "AskOra AI - VAPI Assistant Configuration for Radiant Dental Clinic",
+  "_instructions": "Import this into VAPI dashboard > Assistants > Create > Advanced > Paste JSON",
+  "_required_replacements": [
+    "YOUR_OPENROUTER_API_KEY → your actual OpenRouter key from openrouter.ai",
+    "YOUR_BACKEND_URL → your deployed backend URL e.g. https://askora-backend.railway.app",
+    "YOUR_VAPI_PHONE_NUMBER_ID → the phone number ID from VAPI dashboard"
+  ],
+
+  "name": "Clara - Radiant Dental AI Receptionist",
+
+  "firstMessage": "Hello! Thank you for calling Radiant Dental Clinic. This is Clara, your AI receptionist. How can I help you today?",
+
+  "endCallMessage": "Thank you for calling Radiant Dental! Have a wonderful day. Goodbye!",
+
+  "model": {
+    "provider": "openai",
+    "model": "gpt-4o-mini",
+    "url": "https://openrouter.ai/api/v1",
+    "apiKey": "YOUR_OPENROUTER_API_KEY",
+    "messages": [
+      {
+        "role": "system",
+        "content": "You are Clara, a warm, professional, and efficient virtual receptionist for Radiant Dental Clinic.\n\n## Your Primary Goals:\n1. Answer questions about dental services, pricing, hours, and insurance\n2. Help patients schedule appointments and provide the booking link\n3. Capture patient name, phone, and email when possible\n4. Handle emergency dental situations with urgency and empathy\n\n## Clinic Information:\n- **Name:** Radiant Dental Clinic\n- **Hours:** Monday-Friday 8:00 AM - 6:00 PM, Saturday 9:00 AM - 2:00 PM, Closed Sunday\n- **Location:** 120 Medical Center Parkway, Suite 302, Houston, TX 77030\n- **Insurance:** Delta Dental, Cigna, Aetna, MetLife, Guardian (PPO plans)\n- **Booking Link:** https://calendly.com/radiant-dental/appointment\n- **Services:** Dental cleaning, Implants ($3,000-$4,500), Invisalign ($3,500-$8,000), Veneers, Whitening, Root Canal, Extractions, Emergency Dentistry\n\n## Behavior Rules:\n- Keep responses SHORT and CONVERSATIONAL — this is a phone call, not an email\n- NEVER read long lists; summarize in 2-3 sentences\n- For emergencies: prioritize immediate scheduling, show empathy first\n- If you don't know something specific, say 'Let me have our team follow up with you'\n- ALWAYS offer the booking link for appointment requests\n- Collect name and phone number before sending booking link\n- Ask only ONE question at a time\n\n## If caller wants to book:\n1. Collect their name\n2. Confirm phone number\n3. Tell them you're sending a booking link via SMS\n4. End warmly\n\n## Use getKnowledgeBaseAnswer for specific questions:\nWhen asked detailed questions about pricing, procedures, or policies you're not sure about, use the getKnowledgeBaseAnswer function to retrieve accurate information."
+      }
+    ],
+    "tools": [
+      {
+        "type": "function",
+        "function": {
+          "name": "getKnowledgeBaseAnswer",
+          "description": "Look up detailed clinic information, pricing, or procedure details from the knowledge base. Use this when asked specific questions about services, costs, or policies.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "query": {
+                "type": "string",
+                "description": "The patient's specific question to look up"
+              }
+            },
+            "required": ["query"]
+          }
+        }
+      }
+    ],
+    "temperature": 0.6,
+    "maxTokens": 200
+  },
+
+  "voice": {
+    "provider": "11labs",
+    "voiceId": "21m00Tcm4TlvDq8ikWAM",
+    "_voiceNote": "Rachel voice — professional female US accent. Change voiceId for different voice.",
+    "_alternativeVoices": {
+      "11labs_bella": "EXAVITQu4vr4xnSDxMaL",
+      "11labs_adam": "pNInz6obpgDQGcFmaJgB",
+      "cartesia_sophie": "Use provider: cartesia instead"
+    },
+    "speed": 1.0,
+    "stability": 0.5,
+    "similarityBoost": 0.75
+  },
+
+  "transcriber": {
+    "provider": "deepgram",
+    "model": "nova-2",
+    "language": "en",
+    "smartFormat": true,
+    "keywords": ["Radiant Dental", "Clara", "Invisalign", "Calendly", "Delta Dental"]
+  },
+
+  "serverUrl": "YOUR_BACKEND_URL/webhook/vapi",
+  "serverUrlSecret": "vapi-secret-key-change-this",
+
+  "phoneNumberId": "YOUR_VAPI_PHONE_NUMBER_ID",
+
+  "endCallPhrases": [
+    "goodbye",
+    "bye bye",
+    "have a good day",
+    "talk to you later",
+    "thanks bye"
+  ],
+
+  "silenceTimeoutSeconds": 20,
+  "maxDurationSeconds": 600,
+  "backgroundSound": "office",
+  "backchannelingEnabled": true,
+  "backgroundDenoisingEnabled": true,
+
+  "analysisPlan": {
+    "summaryPrompt": "Summarize this dental clinic call in 1-2 sentences. Include: patient name (if given), what they called about, and the outcome.",
+    "structuredDataPrompt": "Extract: { callerName, serviceRequested, wantsBooking (true/false), urgencyLevel (low/medium/high), emailMentioned }",
+    "structuredDataSchema": {
+      "type": "object",
+      "properties": {
+        "callerName": { "type": "string" },
+        "serviceRequested": { "type": "string" },
+        "wantsBooking": { "type": "boolean" },
+        "urgencyLevel": { "type": "string", "enum": ["low", "medium", "high"] },
+        "emailMentioned": { "type": ["string", "null"] }
+      }
+    }
+  },
+
+  "artifactPlan": {
+    "recordingEnabled": true,
+    "videoRecordingEnabled": false,
+    "transcriptPlan": {
+      "enabled": true
+    }
+  }
+}

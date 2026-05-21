@@ -1,0 +1,98 @@
+================================================================================
+PROJECT PORTFOLIO: ASKORA AI RECEPTIONIST & SAAS DASHBOARD
+================================================================================
+
+PROJECT TITLE:
+AskOra AI - Enterprise-Grade AI Voice Assistant MVP & SaaS Receptionist Dashboard
+
+SUBTITLE:
+An automated, RAG-powered voice assistant receptionist for dental/medical clinics 
+integrated with a role-gated SaaS analytics dashboard and post-call SMS automation.
+
+--------------------------------------------------------------------------------
+1. PROJECT OVERVIEW
+--------------------------------------------------------------------------------
+AskOra AI is a production-ready, full-stack AI Voice Receptionist built to automate 
+front-desk operations for clinics and service-oriented businesses. It handles incoming 
+patient calls, answers complex questions regarding services, pricing, insurance, and 
+hours, sends scheduling links, and triggers automated follow-ups.
+
+The project pairs a smart telephony agent (Vapi/Twilio) with a custom React SaaS 
+Dashboard for management analytics, live document knowledge base sync, and role-gated 
+business settings.
+
+--------------------------------------------------------------------------------
+2. CORE TECH STACK & SYSTEM ARCHITECTURE
+--------------------------------------------------------------------------------
+* FRONTEND: 
+  - React.js (Vite)
+  - Custom Responsive Dark UI System (Vanilla CSS with CSS Variables)
+  - Role-Based Access Control (RBAC) supporting Admin, Client, and Staff profiles
+  - Dynamic Analytics and state management hooks with mock database fallback
+
+* BACKEND: 
+  - Node.js & Express
+  - Multer (Multipart/form-data upload handler)
+  - PDF-Parse (Local PDF text extraction engine)
+  - Axios & Cheerio (High-performance web scraper & crawler)
+  - JWT & Custom Role Gating Middlewares
+  - Docker container configuration for Google Cloud Run compatibility
+
+* COGNITIVE & RAG ENGINE:
+  - OpenAI GPT Models & Embeddings API
+  - Hybrid RAG System: Automatically falls back to local Token Keyword-Matching 
+    similarity if OpenAI credentials are not provided (enabling zero-cost local testing)
+
+* AUTOMATION & TELEPHONY:
+  - Vapi.ai / Twilio webhook handlers
+  - Self-hosted n8n automation server
+  - OpenRouter API (Llama 3 70B Instruct LLM) for post-call lead extraction
+  - Twilio SMS Gateway for post-call notifications
+
+--------------------------------------------------------------------------------
+3. FEATURE DETAIL & ARCHITECTURAL HIGHLIGHTS
+--------------------------------------------------------------------------------
+
+[A] ROLE-BASED ACCESS CONTROL (RBAC) DASHBOARD
+The frontend implements a multi-tenant client system where views are dynamically gated:
+* ADMIN: Complete system access (Analytics, Call Logs, Leads, Document Uploads, 
+  and LLM System Prompts/Voice settings).
+* CLIENT: View-only access to Analytics, Call Logs, and Leads. Document upload is 
+  hidden, and Settings forms are disabled.
+* STAFF: Front-desk operation view. Access is limited strictly to Call Logs and 
+  Lead tracking; settings and main analytics dashboard are fully restricted.
+
+[B] RETRIEVAL-AUGMENTED GENERATION (RAG) KNOWLEDGE PIPELINE
+Allows administrators to train the voice agent dynamically:
+1. PDF UPLOAD: Upload clinic brochures, FAQs, or pamphlets. The backend extracts, 
+   cleans, and chunks text into semantic windows.
+2. WEBSITE SCRAPING: input any public URL. The backend fetches raw HTML, strips script/style tags, 
+   parses content, and embeds the structured text chunks.
+3. RAG QUERY SEARCH: The telephony webhook calls the query endpoint to retrieve the 
+   top 3 most relevant context windows, injecting them directly into the agent prompt 
+   in real-time during active calls.
+
+[C] POST-CALL AUTOMATION & WORKFLOW ACTIVATION
+Using an active, self-hosted n8n workflow, the system triggers post-call automation:
+1. End-of-call webhook is dispatched by Vapi containing the call transcript.
+2. OpenRouter parses the text using Llama 3 70B, extracting key data points 
+   (Caller Name, Requested Service, Lead Temperature, Email, Call Summary).
+3. Sends an automated follow-up SMS via Twilio with the clinic's scheduling link.
+4. Invokes the backend's `/api/leads` route to save the lead, updating the React 
+   dashboard stats and conversion rate in real-time.
+
+--------------------------------------------------------------------------------
+4. DEPLOYMENT & PRODUCTION READY CONFIGURATIONS
+--------------------------------------------------------------------------------
+* CONTAINERIZATION: Dockerfile ready using lightweight node:20-alpine.
+* INFRASTRUCTURE: Designed for Google Cloud Run, Cloud Firestore, and Google Artifact 
+  Registry.
+* WEBHOOK INTEGRATIONS: Gated authentication with custom headers to prevent 
+  unauthorized scraper queries.
+
+================================================================================
+PORTFOLIO SUMMARY:
+A highly modular, low-overhead enterprise MVP showcasing automated customer relations. 
+It represents a complete bridge between modern LLMs, real-time telephony webhooks, 
+and SaaS management dashboards.
+================================================================================

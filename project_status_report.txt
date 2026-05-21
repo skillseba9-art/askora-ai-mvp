@@ -1,0 +1,187 @@
+================================================================================
+ASKORA AI VOICE ASSISTANT MVP — PROJECT STATUS REPORT
+Generated: May 21, 2026
+================================================================================
+
+1. PROJECT SUMMARY
+--------------------------------------------------------------------------------
+Name:        AskOra AI Voice Assistant MVP
+Purpose:     AI-powered virtual receptionist for clinics (calls, FAQ/RAG, leads,
+             booking links) with a SaaS admin dashboard.
+Structure:   Monorepo-style layout (no Git repo initialized at project root)
+  - backend/     Node.js + Express API (port 5000)
+  - dashboard/   React 19 + Vite frontend (port 5173)
+  - n8n_workflows/  Post-call automation workflow JSON + deploy script
+
+Overall completion estimate: ~55–60% of full MVP roadmap
+
+
+2. TECHNOLOGY STACK
+--------------------------------------------------------------------------------
+Backend:     Node.js, Express 4, Firebase Admin (Firestore), OpenAI SDK,
+             Multer, pdf-parse, Cheerio, Axios
+Frontend:    React 19, Vite 8, vanilla CSS (single App.jsx ~900 lines)
+Database:    Google Cloud Firestore (optional) + in-memory mockDb.js fallback
+AI/RAG:      OpenAI text-embedding-ada-002 + cosine similarity; keyword fallback
+Deploy:      Dockerfile (node:20-alpine), deploy_backend.sh (Cloud Run skeleton)
+Automation:  n8n workflow backups (Twilio SMS, lead extraction) — external to repo
+Voice:       Vapi/Twilio referenced in UI/docs only — NOT implemented in backend code
+
+
+3. WHAT IS WORKING (IMPLEMENTED)
+--------------------------------------------------------------------------------
+
+[A] BACKEND (server.js — 725 lines)
+  ✓ Express server with CORS + JSON body parsing
+  ✓ Firestore integration when FIREBASE_SERVICE_ACCOUNT is set in .env
+  ✓ Demo/mock fallback via mockDb.js when Firestore unavailable
+  ✓ Auth: POST /api/auth/login (hardcoded 3 users + permissive demo fallback)
+  ✓ Dashboard APIs:
+      GET  /api/stats, /api/calls, /api/leads, /api/settings, /api/documents
+      POST /api/leads, /api/settings
+  ✓ RAG pipeline:
+      POST /api/documents/upload      (real PDF parse + chunk + embed)
+      POST /api/documents/scrape      (URL scrape via Cheerio)
+      POST /api/documents/upload-mock (demo chunks)
+      POST /api/rag/query             (vector or keyword search, top 3)
+  ✓ Firestore CRUD test routes: /test-create, /test-read, /test-update/:id,
+      /test-delete/:id
+  ✓ Knowledge base loaded from Firestore collection `knowledge_base` on startup
+  ✓ Lead creation updates stats (totalLeads, conversionRate) in Firestore/mock
+
+[B] FRONTEND (dashboard/src/App.jsx)
+  ✓ Full UI shell: login, sidebar, 5 tabs (Dashboard, Calls, Leads, KB, Settings)
+  ✓ Role-based UI gating (admin / client / staff) — visual only, no server enforcement
+  ✓ Login calls backend /api/auth/login with offline demo fallback
+  ✓ Settings save → POST /api/settings
+  ✓ Knowledge Base: URL scrape + mock PDF upload wired to backend
+  ✓ Rich mock demo data in mockDatabase.js (stats, calls, leads, settings, docs)
+  ✓ Built dist/ exists (previous production build)
+
+[C] INFRASTRUCTURE & DOCS
+  ✓ Dockerfile for backend Cloud Run
+  ✓ deploy_backend.sh (placeholder GCP project ID)
+  ✓ demo_credentials.txt, roadmap_plan.txt, project_portfolio.txt
+  ✓ n8n_workflows/post_call_automation.json + backup workflow
+
+
+4. CRITICAL ISSUES / BLOCKERS
+--------------------------------------------------------------------------------
+  [!] App.jsx BROKEN: mockDatabase import is commented out but mockStats,
+      mockCallLogs, mockSettings, mockDocuments, mockLeads are still referenced.
+      → Dashboard will crash with ReferenceError on startup until import is restored.
+
+  [!] Frontend NOT connected to main APIs: No fetch to /api/stats, /api/calls,
+      /api/leads, /api/documents. Only /test-read (Firestore test collection) and
+      auth/settings/KB endpoints are used. Dashboard shows static mock data.
+
+  [!] Security: backend/.env contains live Firebase service account credentials.
+      Project is NOT a Git repo, but secrets must not be committed or shared.
+      No JWT/session tokens despite jsonwebtoken in package.json (unused).
+      Auth accepts any credentials in demo fallback mode.
+
+  [!] Real PDF upload UI uses upload-mock only; /api/documents/upload (Multer)
+      is not wired from the dashboard drag-and-drop area.
+
+  [!] No Twilio/VAPI webhook routes in server.js — voice agent not in this codebase.
+
+  [!] GCP deploy script uses placeholder YOUR_GCP_PROJECT_ID — not deployed yet.
+
+
+5. FEATURE COMPLETION BY ROADMAP MILESTONE
+--------------------------------------------------------------------------------
+Milestone 1 — Setup + Architecture          [████████░░] ~80%
+  - Express backend, React dashboard, Firestore wiring, Dockerfile: DONE
+  - Admin template / production domain: NOT DONE
+
+Milestone 2 — Voice Agent Core              [███░░░░░░░] ~30%
+  - RAG (PDF, scrape, query API): DONE in backend
+  - Twilio/VAPI inbound calls: NOT in repo (external/n8n only)
+  - SMS follow-ups: n8n workflow exists, not integrated in backend
+  - Call logging to Firestore: API exists, no live voice pipeline writing to it
+
+Milestone 3 — Dashboard + Roles             [██████░░░░] ~65%
+  - UI + RBAC views: DONE (frontend)
+  - Analytics from live data: PARTIAL (mock only on frontend)
+  - Settings page: DONE (UI + save API)
+  - Real document upload from UI: PARTIAL (mock upload only)
+
+Milestone 4 — Deployment + QA             [██░░░░░░░░] ~20%
+  - Cloud Run deploy: script only, not executed
+  - Domain (app.askoraai.com): NOT configured
+  - QA / handover docs: minimal
+
+
+6. API ENDPOINT INVENTORY
+--------------------------------------------------------------------------------
+Authentication
+  POST   /api/auth/login
+
+Dashboard data
+  GET    /api/stats
+  GET    /api/calls
+  GET    /api/leads
+  POST   /api/leads
+  GET    /api/settings
+  POST   /api/settings
+  GET    /api/documents
+
+RAG / Documents
+  POST   /api/documents/upload
+  POST   /api/documents/upload-mock
+  POST   /api/documents/scrape
+  POST   /api/rag/query
+
+Firestore tests
+  GET    /test-create
+  GET    /test-read
+  PUT    /test-update/:id
+  DELETE /test-delete/:id
+
+
+7. FIRESTORE COLLECTIONS (when connected)
+--------------------------------------------------------------------------------
+  stats, calls, leads, settings, documents, knowledge_base, testCollection
+
+
+8. ENVIRONMENT VARIABLES (backend/.env)
+--------------------------------------------------------------------------------
+  PORT=5000
+  FIREBASE_SERVICE_ACCOUNT  (configured — Firestore can run live)
+  OPENAI_API_KEY            (optional — enables embeddings + vector RAG)
+
+
+9. HOW TO RUN LOCALLY
+--------------------------------------------------------------------------------
+Backend:
+  cd backend
+  npm install
+  npm run dev
+  → http://localhost:5000
+
+Frontend (fix App.jsx import first):
+  cd dashboard
+  npm install
+  npm run dev
+  → http://localhost:5173
+
+Demo logins: see demo_credentials.txt
+  admin@askoraai.com / admin123
+  client@askoraai.com / client123
+  staff@askoraai.com / staff123
+
+
+10. RECOMMENDED NEXT STEPS (PRIORITY ORDER)
+--------------------------------------------------------------------------------
+  1. Fix App.jsx: uncomment mockDatabase import OR wire all state to /api/* endpoints
+  2. Connect dashboard to GET /api/stats, /api/calls, /api/leads, /api/documents
+  3. Wire real PDF upload to POST /api/documents/upload (multipart FormData)
+  4. Add JWT auth + protect API routes; remove permissive demo login in production
+  5. Rotate Firebase keys; add .env to .gitignore; initialize Git repository
+  6. Implement VAPI/Twilio webhooks in backend to log calls and trigger RAG
+  7. Deploy backend to Cloud Run; host dashboard (Firebase Hosting / Vercel)
+  8. Add automated tests for RAG query and lead creation endpoints
+
+================================================================================
+END OF REPORT
+================================================================================

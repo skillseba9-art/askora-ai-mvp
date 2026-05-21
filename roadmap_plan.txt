@@ -1,0 +1,50 @@
+# Roadmap / Plan for AskOra AI Voice Assistant MVP
+
+## Milestone 1: Setup + Architecture
+**Estimated Time:** 1 Week
+- Finalize GCP setup (Firestore, Cloud Run skeleton).
+- Integrate a modern admin template with the dashboard.
+- Ensure the backend is connected to Firestore.
+
+## Milestone 2: Voice Agent Core
+**Estimated Time:** 2 Weeks
+- Integrate Twilio Voice or VAPI for call handling.
+- Implement RAG for FAQ answering using embeddings from PDFs and website text.
+- Add SMS confirmations and follow-ups.
+- Log all interactions (calls, SMS, etc.) to Firestore.
+
+## Milestone 3: Dashboard + Roles
+**Estimated Time:** 2 Weeks
+- Implement role-based access (Admin/Client/Staff).
+- Add analytics for calls, leads, and missed calls.
+- Create settings page for hours, booking link, and document upload.
+- Ensure the dashboard is clean and professional.
+
+## Milestone 4: Deployment + QA
+**Estimated Time:** 1 Week
+- Deploy the backend to Cloud Run.
+- Set up the domain (e.g., `app.askoraai.com`).
+- Perform QA testing for all features.
+- Write documentation and prepare for handover.
+
+---
+
+### Summary of Pending Tasks
+1. **AI Voice Agent:**
+   - Inbound call handling.
+   - FAQ answering via RAG.
+   - Booking link handling.
+   - SMS confirmations and follow-ups.
+   - Voice and text follow-ups.
+   - Logging to Firestore.
+
+2. **Dashboard:**
+   - Complete role-based access.
+   - Add analytics for calls, leads, and missed calls.
+   - Implement settings page for hours, booking link, and document upload.
+
+3. **Deployment:**
+   - Firestore data structure setup.
+   - Cloud Run backend deployment.
+   - Domain setup (e.g., `app.askoraai.com`).
+   - Documentation and handover.

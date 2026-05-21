@@ -1,0 +1,205 @@
+{
+  "name": "ai_voice_Assistant",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "6bd142ce-2baa-49b5-9501-7e926d7756f0",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "f03e30e1-a2fa-4633-bf32-8bbfdbf24378",
+      "name": "Webhook",
+      "webhookId": "6bd142ce-2baa-49b5-9501-7e926d7756f0"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer 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"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "model",
+              "value": "meta-llama/llama-3-70b-instruct:free"
+            },
+            {
+              "name": "response_format",
+              "value": "={ \"type\": \"json_object\" }"
+            }
+          ]
+        },
+        "specifyBody": "json",
+        "jsonBody": "={\"model\": \"meta-llama/llama-3-70b-instruct:free\", \"response_format\": {\"type\": \"json_object\"}, \"messages\": [{\"role\": \"system\", \"content\": \"You are Clara, an AI lead extractor. Analyze the call details and extract into JSON: {\\\"callerName\\\": \\\"extracted name or Unknown\\\", \\\"serviceRequested\\\": \\\"dental service or query\\\", \\\"leadTemperature\\\": \\\"Hot | Warm | Cold\\\", \\\"callSummary\\\": \\\"one sentence summary\\\", \\\"wantsBooking\\\": true, \\\"email\\\": \\\"email if mentioned, else null\\\"}. Output ONLY valid JSON.\"}, {\"role\": \"user\", \"content\": \"Call Phone: {{ $json.body.message.customer.number }}\\nTranscript:\\n{{ $json.body.message.transcript }}\"}]}",
+        "options": {}
+      },
+      "id": "openrouter-api-node",
+      "name": "OpenRouter LLM Extractor",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        250,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const responseText = items[0].json.choices[0].message.content;\nlet parsedData;\ntry {\n  parsedData = JSON.parse(responseText);\n} catch(e) {\n  parsedData = { callerName: \"Unknown\", serviceRequested: \"General inquiry\", leadTemperature: \"Warm\", callSummary: responseText };\n}\nreturn [{ json: parsedData }];"
+      },
+      "id": "parse-json-code-node",
+      "name": "Parse JSON Content",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.twilio.com/2010-04-01/Accounts/AC45202ae0409320a371d9a6d054b5eef4/Messages.json",
+        "authentication": "basicAuth",
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "From",
+              "value": "+18885559087"
+            },
+            {
+              "name": "To",
+              "value": "={{ $('Webhook').item.json.body.message.customer.number }}"
+            },
+            {
+              "name": "Body",
+              "value": "=Hi {{ $json.callerName }}, thank you for calling! Since you are interested in {{ $json.serviceRequested }}, you can book an appointment using our Calendly portal: https://calendly.com/radiant-dental/appointment"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "twilio-sms-http-node",
+      "name": "Twilio SMS Sender",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        720,
+        -100
+      ],
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "twilio-basic-auth-id",
+          "name": "Twilio Basic Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://your-askora-backend-url.com/api/leads",
+        "sendBody": true,
+        "contentType": "json",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "name",
+              "value": "={{ $json.callerName }}"
+            },
+            {
+              "name": "phone",
+              "value": "={{ $('Webhook').item.json.body.message.customer.number }}"
+            },
+            {
+              "name": "email",
+              "value": "={{ $json.email }}"
+            },
+            {
+              "name": "service",
+              "value": "={{ $json.serviceRequested }}"
+            },
+            {
+              "name": "status",
+              "value": "={{ $json.leadTemperature }}"
+            },
+            {
+              "name": "notes",
+              "value": "={{ $json.callSummary }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "backend-leads-api-node",
+      "name": "Backend Leads Database",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        720,
+        100
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "OpenRouter LLM Extractor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter LLM Extractor": {
+      "main": [
+        [
+          {
+            "node": "Parse JSON Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse JSON Content": {
+      "main": [
+        [
+          {
+            "node": "Twilio SMS Sender",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Backend Leads Database",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {},
+  "staticData": null
+}
