@@ -25,11 +25,32 @@ app.get('/.well-known/appspecific/com.chrome.devtools.json', (req, res) => {
   res.json({});
 });
 
-// Initialize Firestore if FIREBASE_SERVICE_ACCOUNT env var is provided
+// Initialize Firestore — supports both:
+//   1. FIREBASE_SERVICE_ACCOUNT_FILE  (path to JSON file — Render Secret File)
+//   2. FIREBASE_SERVICE_ACCOUNT       (raw JSON string — local .env)
 let db = null;
-if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+let serviceAccount = null;
+
+if (process.env.FIREBASE_SERVICE_ACCOUNT_FILE) {
   try {
-    const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+    const filePath = process.env.FIREBASE_SERVICE_ACCOUNT_FILE;
+    const fileContent = fs.readFileSync(filePath, 'utf8');
+    serviceAccount = JSON.parse(fileContent);
+    console.log(`Firebase service account loaded from file: ${filePath}`);
+  } catch (err) {
+    console.error("Failed to read Firebase service account file:", err.message);
+  }
+} else if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+  try {
+    serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+    console.log("Firebase service account loaded from env variable.");
+  } catch (err) {
+    console.error("Failed to parse FIREBASE_SERVICE_ACCOUNT env variable:", err.message);
+  }
+}
+
+if (serviceAccount) {
+  try {
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount)
     });
@@ -39,7 +60,7 @@ if (process.env.FIREBASE_SERVICE_ACCOUNT) {
     console.error("Firebase Admin SDK failed to initialize: ", err.message);
   }
 } else {
-  console.log("No FIREBASE_SERVICE_ACCOUNT env variable found. Running in mock/demo fallback mode.");
+  console.log("No Firebase credentials found. Running in mock/demo fallback mode.");
 }
 
 // Setup Multer for PDF uploads (saving temporarily to uploads folder)
