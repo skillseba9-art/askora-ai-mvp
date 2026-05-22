@@ -84,7 +84,12 @@ Browser Demo Call
 
 ## Screenshots
 
-> *(Add dashboard screenshot, call log view, and demo call widget here)*
+> <img width="1918" height="911" alt="image" src="https://github.com/user-attachments/assets/cabf9654-bb4e-4646-a787-952ac5eadc3b" />
+<img width="1840" height="607" alt="image" src="https://github.com/user-attachments/assets/b2c7c7a5-1a62-4bdd-8079-ae219e35cf1f" />
+<img width="1825" height="882" alt="image" src="https://github.com/user-attachments/assets/00020bfc-48b3-405a-9e80-dd7739462f70" />
+
+
+
 
 ---
 
