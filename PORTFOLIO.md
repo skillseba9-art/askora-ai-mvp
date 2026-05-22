@@ -38,6 +38,13 @@ AskOra AI is a production-ready AI voice receptionist that answers patient calls
 - AI summary panel with caller intent and outcome
 - Status tags: Booking Made / Lead Generated / Missed Call / Completed
 
+### 🔁 n8n Post-Call Automation (Workflow Ready)
+- Complete n8n workflow designed and included in the codebase
+- Triggers automatically when a call ends via webhook
+- **Pipeline:** Call transcript → GPT-4o-mini lead extraction → Firestore save → Twilio SMS → Gmail notification
+- Workflow is ready to activate — requires client's Twilio and Gmail credentials to go live
+- Easily extendable: add CRM sync, Slack alerts, or calendar booking nodes
+
 ---
 
 ## Tech Stack
@@ -49,6 +56,7 @@ AskOra AI is a production-ready AI voice receptionist that answers patient calls
 | **Database** | Google Cloud Firestore (real-time, NoSQL) |
 | **AI Voice** | Retell AI SDK + GPT-4o-mini via OpenRouter |
 | **RAG Engine** | PDF-Parse + Cheerio scraper + keyword/vector search |
+| **Automation** | n8n workflow (Twilio SMS + Gmail — ready to activate) |
 | **Auth** | Role-based access control (Admin / Client / Staff) |
 | **DevOps** | GitHub → Render auto-deploy, Dockerfile included |
 
@@ -68,6 +76,11 @@ Browser Demo Call
  Google Firestore
       ↓
  AskOra Dashboard (auto-refresh)
+
+ ── n8n Automation Layer (ready to activate) ──
+ Call End Webhook → n8n →
+      ├── Twilio SMS (booking link to caller)
+      └── Gmail (hot lead alert to admin)
 ```
 
 ---
@@ -100,3 +113,4 @@ Browser Demo Call
 - ✅ **Clean codebase** — ~1,200 lines frontend, ~1,200 lines backend, fully commented
 - ✅ **White-label ready** — clinic name, prompt, and branding configurable via Settings tab
 - ✅ **Graceful fallback** — demo mode works even if APIs are offline
+- ✅ **n8n automation included** — post-call SMS + email workflow designed and ready to activate with client credentials
