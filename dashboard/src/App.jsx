@@ -173,7 +173,7 @@ export default function App() {
       const res = await fetch(`${API_BASE_URL}/retell/create-web-call`, { method: 'POST' });
       if (!res.ok) {
         const err = await res.json();
-        alert(`Call শুরু করা গেলো না: ${err.error}`);
+        alert(`Failed to start call: ${err.error}`);
         setCallStatus('idle');
         return;
       }
@@ -192,7 +192,7 @@ export default function App() {
       client.on('call_ended', () => {
         setCallStatus('ended');
         clearInterval(callTimerRef.current);
-        // ৩ সেকেন্ড পরে dashboard refresh করো
+        // Refresh dashboard 3 seconds after call ends
         setTimeout(() => {
           loadDashboardData();
           setCallStatus('idle');
@@ -222,7 +222,7 @@ export default function App() {
 
     } catch (err) {
       console.error('Demo call failed:', err);
-      alert('Call শুরু করতে সমস্যা হয়েছে। Backend চালু আছে কিনা দেখো।');
+      alert('Failed to start call. Please make sure the backend is running.');
       setCallStatus('idle');
     }
   };
@@ -579,15 +579,15 @@ export default function App() {
                 <div>
                   <div style={{ fontWeight: '700', fontSize: '0.95rem' }}>
                     {callStatus === 'idle' && '🎙️ Live AI Demo Call'}
-                    {callStatus === 'connecting' && '⏳ Clara-কে connect করা হচ্ছে...'}
-                    {callStatus === 'active' && `🔴 Live Call চলছে — ${formatDuration(callDuration)}`}
-                    {callStatus === 'ended' && '✅ Call শেষ! Dashboard refresh হচ্ছে...'}
+                    {callStatus === 'connecting' && '⏳ Connecting to Clara...'}
+                    {callStatus === 'active' && `🔴 Live Call — ${formatDuration(callDuration)}`}
+                    {callStatus === 'ended' && '✅ Call Ended! Refreshing dashboard...'}
                   </div>
                   <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
-                    {callStatus === 'idle' && 'Clara AI-র সাথে কথা বলো — call log ও lead automatically তৈরি হবে'}
-                    {callStatus === 'active' && 'Microphone চালু আছে। Clara কথা বলছে...'}
-                    {callStatus === 'connecting' && 'একটু অপেক্ষা করো...'}
-                    {callStatus === 'ended' && 'Call log ও lead save হচ্ছে Firestore-এ'}
+                    {callStatus === 'idle' && 'Talk to Clara AI — call log & lead will be created automatically'}
+                    {callStatus === 'active' && 'Microphone active. Clara is responding...'}
+                    {callStatus === 'connecting' && 'Please wait...'}
+                    {callStatus === 'ended' && 'Saving call log & lead to Firestore...'}
                   </div>
                 </div>
               </div>
@@ -596,12 +596,12 @@ export default function App() {
                 {callStatus === 'idle' && (
                   <button onClick={startDemoCall} className="btn" style={{ padding: '0.6rem 1.4rem', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.11 12 19.79 19.79 0 0 1 1 4.18 2 2 0 0 1 2.96 2h3.1a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-                    Demo Call শুরু করো
+                    Start Demo Call
                   </button>
                 )}
                 {callStatus === 'active' && (
                   <button onClick={endDemoCall} style={{ padding: '0.6rem 1.4rem', fontSize: '0.9rem', background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)', color: '#ef4444', borderRadius: '8px', cursor: 'pointer', fontWeight: '600' }}>
-                    📴 Call শেষ করো
+                    📴 End Call
                   </button>
                 )}
                 {callStatus === 'connecting' && (
@@ -614,6 +614,7 @@ export default function App() {
             {(callStatus === 'active' || callStatus === 'ended') && liveTranscript.length > 0 && (
               <div style={{ marginBottom: '1.5rem', padding: '1rem', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--card-border)', borderRadius: '12px' }}>
                 <div style={{ fontSize: '0.85rem', fontWeight: '600', marginBottom: '0.75rem', color: 'var(--text-secondary)' }}>Live Transcript</div>
+
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxHeight: '180px', overflowY: 'auto' }}>
                   {liveTranscript.map((msg, i) => (
                     <div key={i} style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-start' }}>

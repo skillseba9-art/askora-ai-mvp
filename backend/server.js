@@ -749,19 +749,19 @@ app.post('/api/rag/query', async ({ body: { query } }, res) => {
 const RETELL_API_KEY = process.env.RETELL_API_KEY;
 const RETELL_BASE    = 'https://api.retellai.com';
 
-// POST /api/retell/setup — Retell LLM + Agent তৈরি করে (একবার চালাতে হবে)
+// POST /api/retell/setup — Creates Retell LLM + Agent (run once)
 app.post('/api/retell/setup', async (req, res) => {
-  if (!RETELL_API_KEY) return res.status(400).json({ error: 'RETELL_API_KEY .env-এ নেই' });
+  if (!RETELL_API_KEY) return res.status(400).json({ error: 'RETELL_API_KEY not found in .env' });
 
   try {
-    // Settings থেকে system prompt নাও
+    // Load system prompt from settings
     let settings = mockDb.settings;
     if (db) {
       const snap = await db.collection('settings').doc('main').get();
       if (snap.exists) settings = snap.data();
     }
 
-    // Step 1: Retell LLM তৈরি করো
+    // Step 1: Create Retell LLM
     const llmRes = await axios.post(`${RETELL_BASE}/create-retell-llm`, {
       model: 'gpt-4o-mini',
       general_prompt: settings.systemPrompt || 'You are Clara, a professional virtual receptionist for Radiant Dental Clinic. Answer questions about services, hours, insurance, and help patients book appointments. Be concise and friendly.',
@@ -771,7 +771,7 @@ app.post('/api/retell/setup', async (req, res) => {
     const llmId = llmRes.data.llm_id;
     console.log('✅ Retell LLM created:', llmId);
 
-    // Step 2: Retell Agent তৈরি করো (v2 format — response_engine required)
+    // Step 2: Create Retell Agent (v2 format — response_engine required)
     const agentRes = await axios.post(`${RETELL_BASE}/create-agent`, {
       response_engine: { type: 'retell-llm', llm_id: llmId },
       voice_id: 'cartesia-Cleo',
@@ -790,7 +790,7 @@ app.post('/api/retell/setup', async (req, res) => {
       success: true,
       llm_id: llmId,
       agent_id: agentId,
-      next_step: `RETELL_AGENT_ID=${agentId} → .env ফাইলে add করো`
+      next_step: `Add RETELL_AGENT_ID=${agentId} to your .env file`
     });
 
   } catch (err) {
@@ -799,12 +799,12 @@ app.post('/api/retell/setup', async (req, res) => {
   }
 });
 
-// POST /api/retell/create-web-call — Frontend থেকে demo call শুরু করতে
+// POST /api/retell/create-web-call — Called by frontend to start a demo call
 app.post('/api/retell/create-web-call', async (req, res) => {
-  if (!RETELL_API_KEY) return res.status(400).json({ error: 'RETELL_API_KEY নেই' });
+  if (!RETELL_API_KEY) return res.status(400).json({ error: 'RETELL_API_KEY not found' });
 
   const agentId = process.env.RETELL_AGENT_ID;
-  if (!agentId) return res.status(400).json({ error: 'RETELL_AGENT_ID নেই। আগে /api/retell/setup চালাও।' });
+  if (!agentId) return res.status(400).json({ error: 'RETELL_AGENT_ID not set. Run /api/retell/setup first.' });
 
   try {
     const response = await axios.post(`${RETELL_BASE}/v2/create-web-call`,
@@ -818,7 +818,7 @@ app.post('/api/retell/create-web-call', async (req, res) => {
   }
 });
 
-// GET /api/retell/status — Retell কনফিগার হয়েছে কিনা চেক করো
+// GET /api/retell/status — Check if Retell is configured
 app.get('/api/retell/status', (req, res) => {
   res.json({
     api_key_set: !!RETELL_API_KEY,
@@ -827,7 +827,7 @@ app.get('/api/retell/status', (req, res) => {
   });
 });
 
-// POST /webhook/retell — Call শেষ হলে Retell এখানে data পাঠায়
+// POST /webhook/retell — Retell sends call data here when a call ends
 app.post('/webhook/retell', async (req, res) => {
   res.status(200).json({ received: true }); // Retell-কে তাড়াতাড়ি reply
 
