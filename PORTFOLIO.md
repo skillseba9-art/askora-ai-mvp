@@ -1,7 +1,11 @@
 # AskOra AI — AI Voice Receptionist & SaaS Dashboard
 
-> **Live Demo:** https://askora-ai-mvp.onrender.com  
-> **GitHub:** https://github.com/skillseba9-art/askora-ai-mvp
+## 🔗 Links
+
+| | |
+|--|--|
+| **📂 GitHub Repository** | **https://github.com/skillseba9-art/askora-ai-mvp** |
+| 🌐 Live Backend | https://askora-ai-mvp.onrender.com |
 
 ---
 
